@@ -2,32 +2,32 @@ import numpy as np
 import pandas as pd
 import os
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.model_selection import cross_val_score, StratifiedKFold, GridSearchCV
-from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline
 
-# Load the data
+# Load data
 # proj_folder = "/Users/zihealexzhang/work_local/neuroma_data_project/aim_1"
 proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
 data_folder = os.path.join(proj_folder, "data")
 data_file = os.path.join(data_folder, "TMR_dataset_ML_March24.xlsx")
 
-fig_folder = os.path.join(proj_folder, "figures","secondary_TMR")
+fig_folder = os.path.join(proj_folder, "figures", "primary_TMR")
 df = pd.read_excel(data_file)
 
-df_secondary = df[df['timing_tmr']=='Secondary']
-
-df_secondary = df_secondary.drop(columns=['record_id',
-                                       'participant_id',
-                                       # 'mrn',
-                                       'birth_date',
-                                       'race',
+df_primary = df[df['timing_tmr'] == 'Primary']
+df_primary = df_primary.drop(columns=['record_id',
+                                      'participant_id',
+                                      # 'mrn',
+                                      'birth_date',
+                                      'race',
                                       'adi_natrank',
                                       'adi_statrank',
                                       'employment_status',
                                       'insurance',
-                                       'date_amputation',
+                                      'date_amputation',
                                       'time_preopscoretotmr',
-                                       'date_injury_amputation',
+                                      'date_injury_amputation',
                                       'type_surg_tmr',
                                       'time_amptmr_days',
                                       'date_surgery_ican',
@@ -39,11 +39,11 @@ df_secondary = df_secondary.drop(columns=['record_id',
                                       'malignacy_dichotomous',
                                       'trauma_dichotomous',
                                       'timing_tmr',
-                                      # 'time_amptmr_years',
-                                      # 'age_ican_surgery',
+                                      'time_amptmr_years',
+                                      'age_ican_surgery',
                                       'pain_score_difference',
                                       'MCID',
-                                      # 'preop_score',
+                                      'preop_score',
                                       'pain_mild',
                                       'pain_disappearance',
                                       'opioid_use_postop',
@@ -52,12 +52,15 @@ df_secondary = df_secondary.drop(columns=['record_id',
                                       'limb_side_amputation',
                                       'lvl_amputation',
                                       'pers_disord',
-                       ])
 
-df_secondary = df_secondary.dropna()
+                                      ])
+
+# Drop rows with missing values
+df_primary = df_primary.dropna()
+
 # Define the target variable (dependent variable) as y
-X = df_secondary.drop(columns=['good_outcome'])
-y = df_secondary['good_outcome']
+X = df_primary.drop(columns=['good_outcome'])
+y = df_primary['good_outcome']
 
 # Separate numerical and categorical columns
 numerical_cols = X.select_dtypes(include='number').columns
@@ -81,23 +84,26 @@ for i, cat in enumerate(categorical_cols):
 
 X_encoded = pd.DataFrame(X_encoded, columns=encoded_columns)
 
-# use cross-validation to tune the logistic regression model
-cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=321)
-logistic_regression = LogisticRegression(penalty='l1', solver='liblinear', max_iter=1000000)
+# Set up the RandomForest model
+random_forest = RandomForestClassifier(random_state=321)
 
-# Define the parameter grid
+# Define the parameter grid for tuning
 param_grid = {
-    # 'C': np.logspace(-4, 4, 1000),  # Regularization strength
+    'n_estimators': [100,200,300],  # Number of trees in the forest
+    'max_depth': [None],  # Maximum depth of the tree
+    'min_samples_split': [2, 5, 10],  # Minimum number of samples required to split an internal node
+    'min_samples_leaf': [2,3,4,5,6],  # Minimum number of samples required to be at a leaf node
+    'max_features': [None, 'sqrt', 'log2'],  # Number of features to consider when looking for the best split
     'class_weight': [None, 'balanced'],  # Adjust for class imbalance
-    'C': np.linspace(5, 10, 1000),  # Regularization strength
-    'tol': [1e-3],  # Tolerance for stopping criteria
-    'solver': ['liblinear']  # Solver (could also try 'saga')
 }
 
+# Cross-validation setup
+cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=321)
+
 # Perform the grid search
-grid_search = GridSearchCV(logistic_regression, param_grid, cv=cv, n_jobs=-1, scoring='roc_auc')
-# grid_search = GridSearchCV(logistic_regression, param_grid, cv=cv, n_jobs=-1, scoring='f1')
-# grid_search = GridSearchCV(logistic_regression, param_grid, cv=cv, n_jobs=-1, scoring='accuracy')
+# grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='roc_auc')
+# grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='f1')
+grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='accuracy')
 grid_search.fit(X_encoded, y)
 
 # Get the best model
@@ -109,17 +115,9 @@ print(f"Best model: {best_model}")
 print(f"Best params: {best_params}")
 print(f"Best score: {best_score}")
 
-'''
-Best model: LogisticRegression(C=2.782559402207126, max_iter=1000000, penalty='l1',
-                   solver='liblinear', tol=0.001)
-Best params: {'C': 2.782559402207126, 'class_weight': None, 'solver': 'liblinear', 'tol': 0.001}
-Best score: 0.8371794871794872
-'''
-'''
-Best model: LogisticRegression(C=7.132132132132132, max_iter=1000000, penalty='l1',
-                   solver='liblinear', tol=0.001)
-Best params: {'C': 7.132132132132132, 'class_weight': None, 'solver': 'liblinear', 'tol': 0.001}
-Best score: 0.8417582417582418
-'''
 
-
+'''
+Best model: RandomForestClassifier(min_samples_leaf=4, n_estimators=200, random_state=321)
+Best params: {'class_weight': None, 'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 4, 'min_samples_split': 2, 'n_estimators': 200}
+Best score: 0.7880952380952381
+'''

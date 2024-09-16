@@ -5,29 +5,28 @@ import os
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import cross_val_score, StratifiedKFold, GridSearchCV
 
-# Load the data
+# Load data
 # proj_folder = "/Users/zihealexzhang/work_local/neuroma_data_project/aim_1"
 proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
 data_folder = os.path.join(proj_folder, "data")
 data_file = os.path.join(data_folder, "TMR_dataset_ML_March24.xlsx")
 
-fig_folder = os.path.join(proj_folder, "figures","secondary_TMR")
+fig_folder = os.path.join(proj_folder, "figures", "primary_TMR")
 df = pd.read_excel(data_file)
 
-df_secondary = df[df['timing_tmr']=='Secondary']
-
-df_secondary = df_secondary.drop(columns=['record_id',
-                                       'participant_id',
-                                       # 'mrn',
-                                       'birth_date',
-                                       'race',
+df_primary = df[df['timing_tmr'] == 'Primary']
+df_primary = df_primary.drop(columns=['record_id',
+                                      'participant_id',
+                                      # 'mrn',
+                                      'birth_date',
+                                      'race',
                                       'adi_natrank',
                                       'adi_statrank',
                                       'employment_status',
                                       'insurance',
-                                       'date_amputation',
+                                      'date_amputation',
                                       'time_preopscoretotmr',
-                                       'date_injury_amputation',
+                                      'date_injury_amputation',
                                       'type_surg_tmr',
                                       'time_amptmr_days',
                                       'date_surgery_ican',
@@ -39,11 +38,11 @@ df_secondary = df_secondary.drop(columns=['record_id',
                                       'malignacy_dichotomous',
                                       'trauma_dichotomous',
                                       'timing_tmr',
-                                      # 'time_amptmr_years',
-                                      # 'age_ican_surgery',
+                                      'time_amptmr_years',
+                                      'age_ican_surgery',
                                       'pain_score_difference',
                                       'MCID',
-                                      # 'preop_score',
+                                      'preop_score',
                                       'pain_mild',
                                       'pain_disappearance',
                                       'opioid_use_postop',
@@ -52,12 +51,15 @@ df_secondary = df_secondary.drop(columns=['record_id',
                                       'limb_side_amputation',
                                       'lvl_amputation',
                                       'pers_disord',
-                       ])
 
-df_secondary = df_secondary.dropna()
+                                      ])
+
+# Drop rows with missing values
+df_primary = df_primary.dropna()
+
 # Define the target variable (dependent variable) as y
-X = df_secondary.drop(columns=['good_outcome'])
-y = df_secondary['good_outcome']
+X = df_primary.drop(columns=['good_outcome'])
+y = df_primary['good_outcome']
 
 # Separate numerical and categorical columns
 numerical_cols = X.select_dtypes(include='number').columns
@@ -90,11 +92,11 @@ param_grid = [
     {'kernel': ['poly'], 'degree': [2, 3, 4], 'gamma': [0.01, 0.1, 1], 'coef0': [0, 1]},
     {'kernel': ['sigmoid'], 'gamma': [0.01, 0.1, 1], 'coef0': [0, 1]},
 ]
-cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=321)
+cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=321)
 
-grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='roc_auc')
+# grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='roc_auc')
 # grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='f1')
-# grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='accuracy')
+grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='accuracy')
 grid_search.fit(X_encoded, y)
 
 best_model = grid_search.best_estimator_
@@ -130,26 +132,25 @@ for kernel in kernels:
     print("-" * 40)
 
 '''
-Best model: EMRVC(alpha_max=1000.0, coef0=1, degree=2, gamma=0.01,
-      init_alpha=0.00010203040506070809, kernel='poly', max_iter=100000)
-Best params: {'coef0': 1, 'degree': 2, 'gamma': 0.01, 'kernel': 'poly'}
-Best score: 0.8723443223443225
-Best model for kernel 'poly':
-Parameters: {'coef0': 1, 'degree': 2, 'gamma': 0.01, 'kernel': 'poly'}
-ROC AUC Score: 0.8723
+Best model: EMRVC(alpha_max=1000.0, gamma=0.1, init_alpha=0.00026014568158168577,
+      max_iter=100000)
+Best params: {'gamma': 0.1, 'kernel': 'rbf'}
+Best score: 0.7888888888888889
+Best model for kernel 'rbf':
+Parameters: {'gamma': 0.1, 'kernel': 'rbf'}
+ROC AUC Score: 0.7889
 ----------------------------------------
 Best model for kernel 'sigmoid':
-Parameters: {'coef0': 0, 'gamma': 0.1, 'kernel': 'sigmoid'}
-ROC AUC Score: 0.8524
+Parameters: {'coef0': 0, 'gamma': 0.01, 'kernel': 'sigmoid'}
+ROC AUC Score: 0.7889
+----------------------------------------
+Best model for kernel 'poly':
+Parameters: {'coef0': 1, 'degree': 2, 'gamma': 0.1, 'kernel': 'poly'}
+ROC AUC Score: 0.7722
 ----------------------------------------
 Best model for kernel 'linear':
 Parameters: {'kernel': 'linear'}
-ROC AUC Score: 0.8460
-----------------------------------------
-Best model for kernel 'rbf':
-Parameters: {'gamma': 0.01, 'kernel': 'rbf'}
-ROC AUC Score: 0.8084
+ROC AUC Score: 0.7571
 ----------------------------------------
 '''
 
-# The best model is a polynomial kernel with degree 2, gamma=0.01, and coef0=1, which achieved an ROC AUC score of 0.8723.

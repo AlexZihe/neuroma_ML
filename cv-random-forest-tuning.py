@@ -95,8 +95,8 @@ param_grid = {
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=321)
 
 # Perform the grid search
-# grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='roc_auc')
-grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='f1')
+grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='roc_auc')
+# grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='f1')
 # grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='accuracy')
 grid_search.fit(X_encoded, y)
 

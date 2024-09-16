@@ -10,30 +10,28 @@ from sklearn.metrics import roc_auc_score, f1_score
 from sklearn.inspection import permutation_importance
 from matplotlib import pyplot as plt
 
-# Load and prepare the data
-# Load the data
+# Load data
 # proj_folder = "/Users/zihealexzhang/work_local/neuroma_data_project/aim_1"
 proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
 data_folder = os.path.join(proj_folder, "data")
 data_file = os.path.join(data_folder, "TMR_dataset_ML_March24.xlsx")
 
-fig_folder = os.path.join(proj_folder, "figures","secondary_TMR")
+fig_folder = os.path.join(proj_folder, "figures", "primary_TMR")
 df = pd.read_excel(data_file)
 
-df_secondary = df[df['timing_tmr']=='Secondary']
-
-df_secondary = df_secondary.drop(columns=['record_id',
-                                       'participant_id',
-                                       # 'mrn',
-                                       'birth_date',
-                                       'race',
+df_primary = df[df['timing_tmr'] == 'Primary']
+df_primary = df_primary.drop(columns=['record_id',
+                                      'participant_id',
+                                      # 'mrn',
+                                      'birth_date',
+                                      'race',
                                       'adi_natrank',
                                       'adi_statrank',
                                       'employment_status',
                                       'insurance',
-                                       'date_amputation',
+                                      'date_amputation',
                                       'time_preopscoretotmr',
-                                       'date_injury_amputation',
+                                      'date_injury_amputation',
                                       'type_surg_tmr',
                                       'time_amptmr_days',
                                       'date_surgery_ican',
@@ -45,11 +43,11 @@ df_secondary = df_secondary.drop(columns=['record_id',
                                       'malignacy_dichotomous',
                                       'trauma_dichotomous',
                                       'timing_tmr',
-                                      # 'time_amptmr_years',
-                                      # 'age_ican_surgery',
+                                      'time_amptmr_years',
+                                      'age_ican_surgery',
                                       'pain_score_difference',
                                       'MCID',
-                                      # 'preop_score',
+                                      'preop_score',
                                       'pain_mild',
                                       'pain_disappearance',
                                       'opioid_use_postop',
@@ -58,12 +56,15 @@ df_secondary = df_secondary.drop(columns=['record_id',
                                       'limb_side_amputation',
                                       'lvl_amputation',
                                       'pers_disord',
-                       ])
 
-df_secondary = df_secondary.dropna()
+                                      ])
+
+# Drop rows with missing values
+df_primary = df_primary.dropna()
+
 # Define the target variable (dependent variable) as y
-X = df_secondary.drop(columns=['good_outcome'])
-y = df_secondary['good_outcome']
+X = df_primary.drop(columns=['good_outcome'])
+y = df_primary['good_outcome']
 
 # Separate numerical and categorical columns
 numerical_cols = X.select_dtypes(include='number').columns
@@ -89,13 +90,17 @@ X_encoded = pd.DataFrame(X_encoded, columns=encoded_columns)
 
 
 # Define the models
-logistic_regression = LogisticRegression(C=7.132132132132132, max_iter=1000000, penalty='l1',
-                                         solver='liblinear', tol=0.001)
-random_forest = RandomForestClassifier(min_samples_leaf=4, n_estimators=500, random_state=321)
-rvm_model = EMRVC(alpha_max=1000.0, coef0=1, degree=2, gamma=0.01, kernel='poly', max_iter=100000)
+logistic_regression = LogisticRegression(C=3.737425742391064, class_weight='balanced',
+                   max_iter=1000000, penalty='l1', solver='liblinear',
+                   tol=0.001)
+# logistic_regression = LogisticRegression(C=0.2652652652652653, max_iter=1000000, penalty='l1',
+#                    solver='liblinear', tol=0.001)
+random_forest = RandomForestClassifier(min_samples_leaf=4, n_estimators=200, random_state=321)
+rvm_model = EMRVC(alpha_max=1000.0, gamma=0.1, init_alpha=0.00026014568158168577,
+      max_iter=100000)
 
 # Number of iterations for train-test splits
-n_iterations = 10
+n_iterations = 5
 
 # Initialize lists to store the ROC AUC scores
 logistic_scores = []
@@ -244,29 +249,29 @@ Output:
 ---------------------------------------------------------
 AU-ROC scores for each model:
 
-Logistic Regression Mean ROC AUC: 0.8055 ± 0.1064
-Random Forest Mean ROC AUC: 0.8374 ± 0.0851
-RVM Mean ROC AUC: 0.8484 ± 0.0825
-Final Stacked Model Mean ROC AUC: 0.8418 ± 0.0796
+Logistic Regression Mean ROC AUC: 0.7333 ± 0.0816
+Random Forest Mean ROC AUC: 0.8238 ± 0.0777
+RVM Mean ROC AUC: 0.8524 ± 0.0744
+Final Stacked Model Mean ROC AUC: 0.8143 ± 0.0697
 ---------------------------------------------------------
 
 
 ---------------------------------------------------------
 Accuracy scores for each model:
 
-Logistic Regression Mean Accuracy: 0.7150 ± 0.0950
-Random Forest Mean Accuracy: 0.7900 ± 0.0663
-RVM Mean Accuracy: 0.7900 ± 0.0831
-Final Stacked Model Mean Accuracy: 0.7650 ± 0.0743
+Logistic Regression Mean Accuracy: 0.7385 ± 0.0615
+Random Forest Mean Accuracy: 0.7846 ± 0.0576
+RVM Mean Accuracy: 0.8000 ± 0.0784
+Final Stacked Model Mean Accuracy: 0.8000 ± 0.0615
 ---------------------------------------------------------
 
 
 ---------------------------------------------------------
 F1 scores for each model:
 
-Logistic Regression Mean F1 Score: 0.7746 ± 0.0773
-Random Forest Mean F1 Score: 0.8527 ± 0.0473
-RVM Mean F1 Score: 0.8354 ± 0.0654
-Final Stacked Model Mean F1 Score: 0.8150 ± 0.0580
+Logistic Regression Mean F1 Score: 0.7479 ± 0.0714
+Random Forest Mean F1 Score: 0.8211 ± 0.0441
+RVM Mean F1 Score: 0.8235 ± 0.0655
+Final Stacked Model Mean F1 Score: 0.8134 ± 0.0629
 ---------------------------------------------------------
 '''
