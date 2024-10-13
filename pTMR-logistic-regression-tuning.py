@@ -1,9 +1,9 @@
 import numpy as np
-from sklearn_rvm import EMRVC
 import pandas as pd
 import os
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import cross_val_score, StratifiedKFold, GridSearchCV
+from sklearn.linear_model import LogisticRegression
 
 # Load data
 # proj_folder = "/Users/zihealexzhang/work_local/neuroma_data_project/aim_1"
@@ -56,7 +56,6 @@ df_primary = df_primary.drop(columns=['record_id',
 
 # Drop rows with missing values
 df_primary = df_primary.dropna()
-
 # Define the target variable (dependent variable) as y
 X = df_primary.drop(columns=['good_outcome'])
 y = df_primary['good_outcome']
@@ -83,22 +82,24 @@ for i, cat in enumerate(categorical_cols):
 
 X_encoded = pd.DataFrame(X_encoded, columns=encoded_columns)
 
-# use cross-validation to tune the rvm model
-rvm_model = EMRVC(max_iter=100000,alpha_max = 1e3)
+# use cross-validation to tune the logistic regression model
+cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=321)
+logistic_regression = LogisticRegression(penalty='l1', solver='liblinear', max_iter=1000000)
 
-param_grid = [
-    {'kernel': ['linear']},
-    {'kernel': ['rbf'], 'gamma': [0.01, 0.1, 1, 10]},
-    {'kernel': ['poly'], 'degree': [2, 3, 4], 'gamma': [0.01, 0.1, 1], 'coef0': [0, 1]},
-    {'kernel': ['sigmoid'], 'gamma': [0.01, 0.1, 1], 'coef0': [0, 1]},
-]
-cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=321)
+# Define the parameter grid
+param_grid = {
+    # 'C': np.logspace(-4, 4, 1000),  # Regularization strength
+    'class_weight': [None, 'balanced'],  # Adjust for class imbalance
+    'C': np.linspace(0, 3, 1000),  # Regularization strength
+    'tol': [1e-3],  # Tolerance for stopping criteria
+    'solver': ['liblinear']  # Solver (could also try 'saga')
+}
 
-# grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='roc_auc')
-# grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='f1')
-grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='accuracy')
+# Perform the grid search
+grid_search = GridSearchCV(logistic_regression, param_grid, cv=cv, n_jobs=-1, scoring='roc_auc')
 grid_search.fit(X_encoded, y)
 
+# Get the best model
 best_model = grid_search.best_estimator_
 best_params = grid_search.best_params_
 best_score = grid_search.best_score_
@@ -107,50 +108,13 @@ print(f"Best model: {best_model}")
 print(f"Best params: {best_params}")
 print(f"Best score: {best_score}")
 
-# Create a DataFrame from the cv_results_
-results_df = pd.DataFrame(grid_search.cv_results_)
-results_df = results_df.sort_values(by='mean_test_score', ascending=False)
-results_df = results_df.reset_index(drop=True)
-results_df.to_csv(os.path.join(data_folder, "rvm_results.csv"), index=False)
-
-# Print the best results for each kernel
-kernels = results_df['param_kernel'].unique()
-for kernel in kernels:
-    # Filter results for the current kernel
-    kernel_results = results_df[results_df['param_kernel'] == kernel]
-
-    # Find the index of the best result for this kernel
-    best_index = kernel_results['mean_test_score'].idxmax()
-
-    # Print the best parameters and score for this kernel
-    best_params = kernel_results.loc[best_index, 'params']
-    best_score = kernel_results.loc[best_index, 'mean_test_score']
-
-    print(f"Best model for kernel '{kernel}':")
-    print(f"Parameters: {best_params}")
-    print(f"ROC AUC Score: {best_score:.4f}")
-    print("-" * 40)
+'''
+Best model: LogisticRegression(C=0.2072072072072072, class_weight='balanced',
+                   max_iter=1000000, penalty='l1', solver='liblinear',
+                   tol=0.001)
+Best params: {'C': 0.2072072072072072, 'class_weight': 'balanced', 'solver': 'liblinear', 'tol': 0.001}
+Best score: 0.7902777777777777
 
 '''
-Best model: EMRVC(alpha_max=1000.0, gamma=0.1, init_alpha=0.00026014568158168577,
-      max_iter=100000)
-Best params: {'gamma': 0.1, 'kernel': 'rbf'}
-Best score: 0.7888888888888889
-Best model for kernel 'rbf':
-Parameters: {'gamma': 0.1, 'kernel': 'rbf'}
-ROC AUC Score: 0.7889
-----------------------------------------
-Best model for kernel 'sigmoid':
-Parameters: {'coef0': 0, 'gamma': 0.01, 'kernel': 'sigmoid'}
-ROC AUC Score: 0.7889
-----------------------------------------
-Best model for kernel 'poly':
-Parameters: {'coef0': 1, 'degree': 2, 'gamma': 0.1, 'kernel': 'poly'}
-ROC AUC Score: 0.7722
-----------------------------------------
-Best model for kernel 'linear':
-Parameters: {'kernel': 'linear'}
-ROC AUC Score: 0.7571
-----------------------------------------
-'''
+
 

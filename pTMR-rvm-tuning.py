@@ -1,13 +1,11 @@
 import numpy as np
+from sklearn_rvm import EMRVC
 import pandas as pd
 import os
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.model_selection import GridSearchCV, StratifiedKFold
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_val_score, StratifiedKFold, GridSearchCV
 
 # Load data
-# proj_folder = "/Users/zihealexzhang/work_local/neuroma_data_project/aim_1"
 proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
 data_folder = os.path.join(proj_folder, "data")
 data_file = os.path.join(data_folder, "TMR_dataset_ML_March24.xlsx")
@@ -84,29 +82,22 @@ for i, cat in enumerate(categorical_cols):
 
 X_encoded = pd.DataFrame(X_encoded, columns=encoded_columns)
 
-# Set up the RandomForest model
-random_forest = RandomForestClassifier(random_state=321)
+# use cross-validation to tune the rvm model
+rvm_model = EMRVC(max_iter=100000,alpha_max = 1e3)
 
-# Define the parameter grid for tuning
-param_grid = {
-    'n_estimators': [100,200,300],  # Number of trees in the forest
-    'max_depth': [None],  # Maximum depth of the tree
-    'min_samples_split': [2, 5, 10],  # Minimum number of samples required to split an internal node
-    'min_samples_leaf': [2,3,4,5,6],  # Minimum number of samples required to be at a leaf node
-    'max_features': [None, 'sqrt', 'log2'],  # Number of features to consider when looking for the best split
-    'class_weight': [None, 'balanced'],  # Adjust for class imbalance
-}
+param_grid = [
+    {'kernel': ['linear']},
+    {'kernel': ['rbf'], 'gamma': [0.01, 0.1, 1, 10]},
+    {'kernel': ['poly'], 'degree': [2, 3, 4], 'gamma': [0.01, 0.1, 1], 'coef0': [0, 1]},
+    {'kernel': ['sigmoid'], 'gamma': [0.01, 0.1, 1], 'coef0': [0, 1]},
+]
 
-# Cross-validation setup
-cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=321)
+cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=321)
 
-# Perform the grid search
-# grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='roc_auc')
-# grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='f1')
-grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='accuracy')
+grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='roc_auc')
+
 grid_search.fit(X_encoded, y)
 
-# Get the best model
 best_model = grid_search.best_estimator_
 best_params = grid_search.best_params_
 best_score = grid_search.best_score_
@@ -115,9 +106,51 @@ print(f"Best model: {best_model}")
 print(f"Best params: {best_params}")
 print(f"Best score: {best_score}")
 
+# Create a DataFrame from the cv_results_
+results_df = pd.DataFrame(grid_search.cv_results_)
+results_df = results_df.sort_values(by='mean_test_score', ascending=False)
+results_df = results_df.reset_index(drop=True)
+results_df.to_csv(os.path.join(data_folder, "rvm_results.csv"), index=False)
+
+# Print the best results for each kernel
+kernels = results_df['param_kernel'].unique()
+for kernel in kernels:
+    # Filter results for the current kernel
+    kernel_results = results_df[results_df['param_kernel'] == kernel]
+
+    # Find the index of the best result for this kernel
+    best_index = kernel_results['mean_test_score'].idxmax()
+
+    # Print the best parameters and score for this kernel
+    best_params = kernel_results.loc[best_index, 'params']
+    best_score = kernel_results.loc[best_index, 'mean_test_score']
+
+    print(f"Best model for kernel '{kernel}':")
+    print(f"Parameters: {best_params}")
+    print(f"ROC AUC Score: {best_score:.4f}")
+    print("-" * 40)
 
 '''
-Best model: RandomForestClassifier(min_samples_leaf=4, n_estimators=200, random_state=321)
-Best params: {'class_weight': None, 'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 4, 'min_samples_split': 2, 'n_estimators': 200}
-Best score: 0.7880952380952381
+Best model: EMRVC(alpha_max=1000.0, coef0=1, gamma=0.1, init_alpha=0.00026014568158168577,
+      kernel='poly', max_iter=100000)
+Best params: {'coef0': 1, 'degree': 3, 'gamma': 0.1, 'kernel': 'poly'}
+Best score: 0.8569444444444445
+Best model for kernel 'poly':
+Parameters: {'coef0': 1, 'degree': 3, 'gamma': 0.1, 'kernel': 'poly'}
+ROC AUC Score: 0.8569
+----------------------------------------
+Best model for kernel 'sigmoid':
+Parameters: {'coef0': 1, 'gamma': 0.1, 'kernel': 'sigmoid'}
+ROC AUC Score: 0.8528
+----------------------------------------
+Best model for kernel 'rbf':
+Parameters: {'gamma': 0.01, 'kernel': 'rbf'}
+ROC AUC Score: 0.8486
+----------------------------------------
+Best model for kernel 'linear':
+Parameters: {'kernel': 'linear'}
+ROC AUC Score: 0.8056
+----------------------------------------
+
 '''
+

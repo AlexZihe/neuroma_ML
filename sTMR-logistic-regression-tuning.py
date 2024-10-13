@@ -108,19 +108,6 @@ print(f"Best params: {best_params}")
 print(f"Best score: {best_score}")
 
 '''
-Best model: LogisticRegression(C=2.782559402207126, max_iter=1000000, penalty='l1',
-                   solver='liblinear', tol=0.001)
-Best params: {'C': 2.782559402207126, 'class_weight': None, 'solver': 'liblinear', 'tol': 0.001}
-Best score: 0.8371794871794872
-'''
-'''
-Best model: LogisticRegression(C=7.132132132132132, max_iter=1000000, penalty='l1',
-                   solver='liblinear', tol=0.001)
-Best params: {'C': 7.132132132132132, 'class_weight': None, 'solver': 'liblinear', 'tol': 0.001}
-Best score: 0.8417582417582418
-'''
-
-'''
 Best model: LogisticRegression(C=0.7957957957957957, class_weight='balanced',
                    max_iter=1000000, penalty='l1', solver='liblinear',
                    tol=0.001)

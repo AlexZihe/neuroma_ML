@@ -2,7 +2,7 @@ import numpy as np
 import os
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold, cross_val_predict, train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn_rvm import EMRVC
@@ -10,28 +10,28 @@ from sklearn.metrics import roc_auc_score, f1_score
 from sklearn.inspection import permutation_importance
 from matplotlib import pyplot as plt
 
-# Load and prepare the data
+# Load data
+# proj_folder = "/Users/zihealexzhang/work_local/neuroma_data_project/aim_1"
 proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
 data_folder = os.path.join(proj_folder, "data")
 data_file = os.path.join(data_folder, "TMR_dataset_ML_March24.xlsx")
 
-fig_folder = os.path.join(proj_folder, "figures","secondary_TMR")
+fig_folder = os.path.join(proj_folder, "figures", "primary_TMR")
 df = pd.read_excel(data_file)
 
-df_secondary = df[df['timing_tmr']=='Secondary']
-
-df_secondary = df_secondary.drop(columns=['record_id',
-                                       'participant_id',
-                                       # 'mrn',
-                                       'birth_date',
-                                       'race',
+df_primary = df[df['timing_tmr'] == 'Primary']
+df_primary = df_primary.drop(columns=['record_id',
+                                      'participant_id',
+                                      # 'mrn',
+                                      'birth_date',
+                                      'race',
                                       'adi_natrank',
                                       'adi_statrank',
                                       'employment_status',
                                       'insurance',
-                                       'date_amputation',
+                                      'date_amputation',
                                       'time_preopscoretotmr',
-                                       'date_injury_amputation',
+                                      'date_injury_amputation',
                                       'type_surg_tmr',
                                       'time_amptmr_days',
                                       'date_surgery_ican',
@@ -43,11 +43,11 @@ df_secondary = df_secondary.drop(columns=['record_id',
                                       'malignacy_dichotomous',
                                       'trauma_dichotomous',
                                       'timing_tmr',
-                                      # 'time_amptmr_years',
-                                      # 'age_ican_surgery',
+                                      'time_amptmr_years',
+                                      'age_ican_surgery',
                                       'pain_score_difference',
                                       'MCID',
-                                      # 'preop_score',
+                                      'preop_score',
                                       'pain_mild',
                                       'pain_disappearance',
                                       'opioid_use_postop',
@@ -56,12 +56,15 @@ df_secondary = df_secondary.drop(columns=['record_id',
                                       'limb_side_amputation',
                                       'lvl_amputation',
                                       'pers_disord',
-                       ])
 
-df_secondary = df_secondary.dropna()
+                                      ])
+
+# Drop rows with missing values
+df_primary = df_primary.dropna()
+
 # Define the target variable (dependent variable) as y
-X = df_secondary.drop(columns=['good_outcome'])
-y = df_secondary['good_outcome']
+X = df_primary.drop(columns=['good_outcome'])
+y = df_primary['good_outcome']
 
 # Separate numerical and categorical columns
 numerical_cols = X.select_dtypes(include='number').columns
@@ -87,13 +90,13 @@ X_encoded = pd.DataFrame(X_encoded, columns=encoded_columns)
 
 
 # Define the models
-logistic_regression = LogisticRegression(C=0.7957957957957957, class_weight='balanced',
+logistic_regression = LogisticRegression(C=0.2072072072072072, class_weight='balanced',
                    max_iter=1000000, penalty='l1', solver='liblinear',
                    tol=0.001)
-random_forest = RandomForestClassifier(class_weight='balanced', min_samples_leaf=10,
-                       n_estimators=400, random_state=321)
-rvm_model = EMRVC(alpha_max=1000.0, coef0=1, degree=2, gamma=0.1,
-      init_alpha=0.00010203040506070809, kernel='poly', max_iter=100000)
+random_forest = RandomForestClassifier(max_features=None, min_samples_leaf=4, n_estimators=400,
+                       random_state=321)
+rvm_model = EMRVC(alpha_max=1000.0, coef0=1, gamma=0.1, init_alpha=0.00026014568158168577,
+      kernel='poly', max_iter=100000)
 
 # Number of iterations for train-test splits
 n_iterations = 10
@@ -165,17 +168,17 @@ print(f"Random Forest Mean±Std F1 Score: {np.mean(rf_f1s):.4f} ± {np.std(rf_f1
 print(f"RVM Mean±Std F1 Score: {np.mean(rvm_f1s):.4f} ± {np.std(rvm_f1s):.4f}")
 
 '''
-Logistic Regression Mean ROC AUC: 0.8165 ± 0.0890
-Random Forest Mean ROC AUC: 0.8462 ± 0.0710
-RVM Mean ROC AUC: 0.8473 ± 0.0948
+Logistic Regression Mean±Std ROC AUC: 0.7131 ± 0.1287
+Random Forest Mean±Std ROC AUC: 0.7881 ± 0.0643
+RVM Mean±Std ROC AUC: 0.7929 ± 0.0947
 
-Logistic Regression Mean Accuracy: 0.7050 ± 0.0757
-Random Forest Mean Accuracy: 0.7500 ± 0.0806
-RVM Mean Accuracy: 0.7700 ± 0.0781
+Logistic Regression Mean±Std Accuracy: 0.4692 ± 0.0231
+Random Forest Mean±Std Accuracy: 0.7231 ± 0.0923
+RVM Mean±Std Accuracy: 0.7231 ± 0.0923
 
-Logistic Regression Mean F1 Score: 0.7500 ± 0.0731
-Random Forest Mean F1 Score: 0.7968 ± 0.0722
-RVM Mean F1 Score: 0.8256 ± 0.0566
+Logistic Regression Mean±Std F1 Score: 0.0722 ± 0.1572
+Random Forest Mean±Std F1 Score: 0.7521 ± 0.0819
+RVM Mean±Std F1 Score: 0.7634 ± 0.0733
 '''
 
 
@@ -212,7 +215,7 @@ plt.figure(figsize=(10, 6))
 shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, plot_type="bar", show=False)
 # Save the plot
 plt.tight_layout()
-plt.subplots_adjust(right=1.2)
+plt.subplots_adjust(right=1.5)
 plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance.png'), bbox_inches='tight', dpi=300)
 
 # Visualize SHAP feature importance as a beeswarm plot

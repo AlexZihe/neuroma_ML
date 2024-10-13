@@ -94,8 +94,7 @@ param_grid = [
 cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=321)
 
 grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='roc_auc')
-# grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='f1')
-# grid_search = GridSearchCV(rvm_model, param_grid, cv=cv, n_jobs=-1, verbose=1, scoring='accuracy')
+
 grid_search.fit(X_encoded, y)
 
 best_model = grid_search.best_estimator_

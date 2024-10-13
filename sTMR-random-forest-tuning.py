@@ -4,7 +4,6 @@ import os
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.pipeline import Pipeline
 
 # Load the data
 proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
@@ -96,8 +95,7 @@ cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=321)
 
 # Perform the grid search
 grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='roc_auc')
-# grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='f1')
-# grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='accuracy')
+
 grid_search.fit(X_encoded, y)
 
 # Get the best model
