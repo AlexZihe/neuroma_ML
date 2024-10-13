@@ -84,15 +84,15 @@ random_forest = RandomForestClassifier(random_state=321)
 # Define the parameter grid for tuning
 param_grid = {
     'n_estimators': [400,500,600,700],  # Number of trees in the forest
-    'max_depth': [None],  # Maximum depth of the tree
+    'max_depth': [None, 10, 20, 30],  # Maximum depth of the tree
     'min_samples_split': [2, 5, 10],  # Minimum number of samples required to split an internal node
-    'min_samples_leaf': [4],  # Minimum number of samples required to be at a leaf node
+    'min_samples_leaf': [1, 4, 10],  # Minimum number of samples required to be at a leaf node
     'max_features': [None, 'sqrt', 'log2'],  # Number of features to consider when looking for the best split
     'class_weight': [None, 'balanced'],  # Adjust for class imbalance
 }
 
 # Cross-validation setup
-cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=321)
+cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=321)
 
 # Perform the grid search
 grid_search = GridSearchCV(random_forest, param_grid, cv=cv, n_jobs=-1, scoring='roc_auc')
@@ -115,4 +115,11 @@ AUROC
 Best model: RandomForestClassifier(min_samples_leaf=4, n_estimators=500, random_state=321)
 Best params: {'class_weight': None, 'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 4, 'min_samples_split': 2, 'n_estimators': 500}
 Best score: 0.8708791208791208
+'''
+
+'''
+Best model: RandomForestClassifier(class_weight='balanced', min_samples_leaf=10,
+                       n_estimators=400, random_state=321)
+Best params: {'class_weight': 'balanced', 'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 400}
+Best score: 0.8666666666666666
 '''
