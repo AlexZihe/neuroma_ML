@@ -5,54 +5,15 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
 
-# Load data
-# proj_folder = "/Users/zihealexzhang/work_local/neuroma_data_project/aim_1"
-proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
+# Load pRMT dataset
+proj_folder = r"E:\work_local_backup\neuroma_data_project\TMR-ML"
 data_folder = os.path.join(proj_folder, "data")
-data_file = os.path.join(data_folder, "TMR_dataset_ML_March24.xlsx")
+data_file = os.path.join(data_folder, "pTMR.csv")
+df_primary = pd.read_csv(data_file)
 
-fig_folder = os.path.join(proj_folder, "figures", "primary_TMR")
-df = pd.read_excel(data_file)
-
-df_primary = df[df['timing_tmr'] == 'Primary']
-df_primary = df_primary.drop(columns=['record_id',
-                                      'participant_id',
-                                      # 'mrn',
-                                      'birth_date',
-                                      'race',
-                                      'adi_natrank',
-                                      'adi_statrank',
-                                      'employment_status',
-                                      'insurance',
-                                      'date_amputation',
-                                      'time_preopscoretotmr',
-                                      'date_injury_amputation',
-                                      'type_surg_tmr',
-                                      'time_amptmr_days',
-                                      'date_surgery_ican',
-                                      'date_discharge',
-                                      'follow_up_years',
-                                      'last_score',
-                                      'type_surg_rpni',
-                                      'mech_injury_amputation',
-                                      'malignacy_dichotomous',
-                                      'trauma_dichotomous',
-                                      'timing_tmr',
-                                      'time_amptmr_years',
-                                      'age_ican_surgery',
-                                      'pain_score_difference',
-                                      'MCID',
-                                      'preop_score',
-                                      'pain_mild',
-                                      'pain_disappearance',
-                                      'opioid_use_postop',
-                                      'neurop_pain_med_use_postop',
-                                      'psych_comorb',
-                                      'limb_side_amputation',
-                                      'lvl_amputation',
-                                      'pers_disord',
-
-                                      ])
+fig_folder = os.path.join(proj_folder, "figures", "pTMR")
+if not os.path.exists(fig_folder):
+    os.makedirs(fig_folder)
 
 # Drop rows with missing values
 df_primary = df_primary.dropna()
@@ -114,9 +75,8 @@ print(f"Best score: {best_score}")
 
 
 '''
-Best model: RandomForestClassifier(max_features=None, min_samples_leaf=4, n_estimators=400,
-                       random_state=321)
-Best params: {'class_weight': None, 'max_depth': None, 'max_features': None, 'min_samples_leaf': 4, 'min_samples_split': 2, 'n_estimators': 400}
-Best score: 0.8152777777777777
+Best model: RandomForestClassifier(min_samples_leaf=4, n_estimators=600, random_state=321)
+Best params: {'class_weight': None, 'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 4, 'min_samples_split': 2, 'n_estimators': 600}
+Best score: 0.8279166666666666
 
 '''

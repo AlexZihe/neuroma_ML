@@ -5,54 +5,15 @@ import os
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import cross_val_score, StratifiedKFold, GridSearchCV
 
-# Load the data
-# proj_folder = "/Users/zihealexzhang/work_local/neuroma_data_project/aim_1"
-proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
+# Load sRMT dataset
+proj_folder = r"E:\work_local_backup\neuroma_data_project\TMR-ML"
 data_folder = os.path.join(proj_folder, "data")
-data_file = os.path.join(data_folder, "TMR_dataset_ML_March24.xlsx")
+data_file = os.path.join(data_folder, "sTMR.csv")
+df_secondary = pd.read_csv(data_file)
 
-fig_folder = os.path.join(proj_folder, "figures","secondary_TMR")
-df = pd.read_excel(data_file)
-
-df_secondary = df[df['timing_tmr']=='Secondary']
-
-df_secondary = df_secondary.drop(columns=['record_id',
-                                       'participant_id',
-                                       # 'mrn',
-                                       'birth_date',
-                                       'race',
-                                      'adi_natrank',
-                                      'adi_statrank',
-                                      'employment_status',
-                                      'insurance',
-                                       'date_amputation',
-                                      'time_preopscoretotmr',
-                                       'date_injury_amputation',
-                                      'type_surg_tmr',
-                                      'time_amptmr_days',
-                                      'date_surgery_ican',
-                                      'date_discharge',
-                                      'follow_up_years',
-                                      'last_score',
-                                      'type_surg_rpni',
-                                      'mech_injury_amputation',
-                                      'malignacy_dichotomous',
-                                      'trauma_dichotomous',
-                                      'timing_tmr',
-                                      # 'time_amptmr_years',
-                                      # 'age_ican_surgery',
-                                      'pain_score_difference',
-                                      'MCID',
-                                      # 'preop_score',
-                                      'pain_mild',
-                                      'pain_disappearance',
-                                      'opioid_use_postop',
-                                      'neurop_pain_med_use_postop',
-                                      'psych_comorb',
-                                      'limb_side_amputation',
-                                      'lvl_amputation',
-                                      'pers_disord',
-                       ])
+fig_folder = os.path.join(proj_folder, "figures", "sTMR")
+if not os.path.exists(fig_folder):
+    os.makedirs(fig_folder)
 
 df_secondary = df_secondary.dropna()
 # Define the target variable (dependent variable) as y
@@ -130,50 +91,24 @@ for kernel in kernels:
     print("-" * 40)
 
 '''
-Best model: EMRVC(alpha_max=1000.0, coef0=1, degree=2, gamma=0.01,
-      init_alpha=0.00010203040506070809, kernel='poly', max_iter=100000)
-Best params: {'coef0': 1, 'degree': 2, 'gamma': 0.01, 'kernel': 'poly'}
-Best score: 0.8723443223443225
+Best model: EMRVC(alpha_max=1000.0, coef0=0, degree=2, gamma=1,
+      init_alpha=9.611687812379854e-05, kernel='poly', max_iter=100000)
+Best params: {'coef0': 0, 'degree': 2, 'gamma': 1, 'kernel': 'poly'}
+Best score: 0.8238095238095238
 Best model for kernel 'poly':
-Parameters: {'coef0': 1, 'degree': 2, 'gamma': 0.01, 'kernel': 'poly'}
-ROC AUC Score: 0.8723
+Parameters: {'coef0': 0, 'degree': 2, 'gamma': 1, 'kernel': 'poly'}
+ROC AUC Score: 0.8238
 ----------------------------------------
 Best model for kernel 'sigmoid':
 Parameters: {'coef0': 0, 'gamma': 0.1, 'kernel': 'sigmoid'}
-ROC AUC Score: 0.8524
+ROC AUC Score: 0.8000
 ----------------------------------------
 Best model for kernel 'linear':
 Parameters: {'kernel': 'linear'}
-ROC AUC Score: 0.8460
+ROC AUC Score: 0.7750
 ----------------------------------------
 Best model for kernel 'rbf':
 Parameters: {'gamma': 0.01, 'kernel': 'rbf'}
-ROC AUC Score: 0.8084
+ROC AUC Score: 0.7685
 ----------------------------------------
 '''
-
-'''
-Best model: EMRVC(alpha_max=1000.0, coef0=1, degree=2, gamma=0.1,
-      init_alpha=0.00010203040506070809, kernel='poly', max_iter=100000)
-Best params: {'coef0': 1, 'degree': 2, 'gamma': 0.1, 'kernel': 'poly'}
-Best score: 0.825
-Best model for kernel 'poly':
-Parameters: {'coef0': 1, 'degree': 2, 'gamma': 0.1, 'kernel': 'poly'}
-ROC AUC Score: 0.8250
-----------------------------------------
-Best model for kernel 'sigmoid':
-Parameters: {'coef0': 1, 'gamma': 0.1, 'kernel': 'sigmoid'}
-ROC AUC Score: 0.8240
-----------------------------------------
-Best model for kernel 'rbf':
-Parameters: {'gamma': 0.1, 'kernel': 'rbf'}
-ROC AUC Score: 0.8010
-----------------------------------------
-Best model for kernel 'linear':
-Parameters: {'kernel': 'linear'}
-ROC AUC Score: 0.7841
-----------------------------------------
-
-'''
-
-# The best model is a polynomial kernel with degree 2, gamma=0.01, and coef0=1, which achieved an ROC AUC score of 0.8723.

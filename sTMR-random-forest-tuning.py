@@ -5,49 +5,11 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
 
-# Load the data
-proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
+# Load sRMT dataset
+proj_folder = r"E:\work_local_backup\neuroma_data_project\TMR-ML"
 data_folder = os.path.join(proj_folder, "data")
-data_file = os.path.join(data_folder, "TMR_dataset_ML_March24.xlsx")
-
-fig_folder = os.path.join(proj_folder, "figures", "secondary_TMR")
-df = pd.read_excel(data_file)
-
-df_secondary = df[df['timing_tmr'] == 'Secondary']
-
-df_secondary = df_secondary.drop(columns=['record_id',
-                                          'participant_id',
-                                          'birth_date',
-                                          'race',
-                                          'adi_natrank',
-                                          'adi_statrank',
-                                          'employment_status',
-                                          'insurance',
-                                          'date_amputation',
-                                          'time_preopscoretotmr',
-                                          'date_injury_amputation',
-                                          'type_surg_tmr',
-                                          'time_amptmr_days',
-                                          'date_surgery_ican',
-                                          'date_discharge',
-                                          'follow_up_years',
-                                          'last_score',
-                                          'type_surg_rpni',
-                                          'mech_injury_amputation',
-                                          'malignacy_dichotomous',
-                                          'trauma_dichotomous',
-                                          'timing_tmr',
-                                          'pain_score_difference',
-                                          'MCID',
-                                          'pain_mild',
-                                          'pain_disappearance',
-                                          'opioid_use_postop',
-                                          'neurop_pain_med_use_postop',
-                                          'psych_comorb',
-                                          'limb_side_amputation',
-                                          'lvl_amputation',
-                                          'pers_disord',
-                                          ])
+data_file = os.path.join(data_folder, "sTMR.csv")
+df_secondary = pd.read_csv(data_file)
 
 df_secondary = df_secondary.dropna()
 
@@ -109,15 +71,9 @@ print(f"Best score: {best_score}")
 
 
 '''
-AUROC
-Best model: RandomForestClassifier(min_samples_leaf=4, n_estimators=500, random_state=321)
-Best params: {'class_weight': None, 'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 4, 'min_samples_split': 2, 'n_estimators': 500}
-Best score: 0.8708791208791208
-'''
-
-'''
 Best model: RandomForestClassifier(class_weight='balanced', min_samples_leaf=10,
-                       n_estimators=400, random_state=321)
-Best params: {'class_weight': 'balanced', 'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 400}
-Best score: 0.8666666666666666
+                       n_estimators=700, random_state=321)
+Best params: {'class_weight': 'balanced', 'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 700}
+Best score: 0.8160714285714287
+
 '''

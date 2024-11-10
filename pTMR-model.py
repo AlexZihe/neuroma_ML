@@ -9,55 +9,17 @@ from sklearn_rvm import EMRVC
 from sklearn.metrics import roc_auc_score, f1_score
 from sklearn.inspection import permutation_importance
 from matplotlib import pyplot as plt
+from features_name_dict import combined_cols_dict
 
-# Load data
-# proj_folder = "/Users/zihealexzhang/work_local/neuroma_data_project/aim_1"
-proj_folder = r"E:\work_local_backup\neuroma_data_project\aim_1"
+# Load pRMT dataset
+proj_folder = r"E:\work_local_backup\neuroma_data_project\TMR-ML"
 data_folder = os.path.join(proj_folder, "data")
-data_file = os.path.join(data_folder, "TMR_dataset_ML_March24.xlsx")
+data_file = os.path.join(data_folder, "pTMR.csv")
+df_primary = pd.read_csv(data_file)
 
-fig_folder = os.path.join(proj_folder, "figures", "primary_TMR")
-df = pd.read_excel(data_file)
-
-df_primary = df[df['timing_tmr'] == 'Primary']
-df_primary = df_primary.drop(columns=['record_id',
-                                      'participant_id',
-                                      # 'mrn',
-                                      'birth_date',
-                                      'race',
-                                      'adi_natrank',
-                                      'adi_statrank',
-                                      'employment_status',
-                                      'insurance',
-                                      'date_amputation',
-                                      'time_preopscoretotmr',
-                                      'date_injury_amputation',
-                                      'type_surg_tmr',
-                                      'time_amptmr_days',
-                                      'date_surgery_ican',
-                                      'date_discharge',
-                                      'follow_up_years',
-                                      'last_score',
-                                      'type_surg_rpni',
-                                      'mech_injury_amputation',
-                                      'malignacy_dichotomous',
-                                      'trauma_dichotomous',
-                                      'timing_tmr',
-                                      'time_amptmr_years',
-                                      'age_ican_surgery',
-                                      'pain_score_difference',
-                                      'MCID',
-                                      'preop_score',
-                                      'pain_mild',
-                                      'pain_disappearance',
-                                      'opioid_use_postop',
-                                      'neurop_pain_med_use_postop',
-                                      'psych_comorb',
-                                      'limb_side_amputation',
-                                      'lvl_amputation',
-                                      'pers_disord',
-
-                                      ])
+fig_folder = os.path.join(proj_folder, "figures", "pTMR")
+if not os.path.exists(fig_folder):
+    os.makedirs(fig_folder)
 
 # Drop rows with missing values
 df_primary = df_primary.dropna()
@@ -90,13 +52,12 @@ X_encoded = pd.DataFrame(X_encoded, columns=encoded_columns)
 
 
 # Define the models
-logistic_regression = LogisticRegression(C=0.2072072072072072, class_weight='balanced',
+logistic_regression = LogisticRegression(C=0.32732732732732733, class_weight='balanced',
                    max_iter=1000000, penalty='l1', solver='liblinear',
                    tol=0.001)
-random_forest = RandomForestClassifier(max_features=None, min_samples_leaf=4, n_estimators=400,
-                       random_state=321)
-rvm_model = EMRVC(alpha_max=1000.0, coef0=1, gamma=0.1, init_alpha=0.00026014568158168577,
-      kernel='poly', max_iter=100000)
+random_forest = RandomForestClassifier(min_samples_leaf=4, n_estimators=600, random_state=321)
+rvm_model = EMRVC(alpha_max=1000.0, coef0=0, gamma=0.1, init_alpha=0.0001643655489809336,
+      kernel='sigmoid', max_iter=100000)
 
 # Number of iterations for train-test splits
 n_iterations = 10
@@ -168,17 +129,17 @@ print(f"Random Forest Mean±Std F1 Score: {np.mean(rf_f1s):.4f} ± {np.std(rf_f1
 print(f"RVM Mean±Std F1 Score: {np.mean(rvm_f1s):.4f} ± {np.std(rvm_f1s):.4f}")
 
 '''
-Logistic Regression Mean±Std ROC AUC: 0.7131 ± 0.1287
-Random Forest Mean±Std ROC AUC: 0.7881 ± 0.0643
-RVM Mean±Std ROC AUC: 0.7929 ± 0.0947
+Logistic Regression Mean±Std ROC AUC: 0.7762 ± 0.0845
+Random Forest Mean±Std ROC AUC: 0.7873 ± 0.1154
+RVM Mean±Std ROC AUC: 0.7810 ± 0.1318
 
-Logistic Regression Mean±Std Accuracy: 0.4692 ± 0.0231
-Random Forest Mean±Std Accuracy: 0.7231 ± 0.0923
-RVM Mean±Std Accuracy: 0.7231 ± 0.0923
+Logistic Regression Mean±Std Accuracy: 0.6562 ± 0.0803
+Random Forest Mean±Std Accuracy: 0.7250 ± 0.0637
+RVM Mean±Std Accuracy: 0.7438 ± 0.1233
 
-Logistic Regression Mean±Std F1 Score: 0.0722 ± 0.1572
-Random Forest Mean±Std F1 Score: 0.7521 ± 0.0819
-RVM Mean±Std F1 Score: 0.7634 ± 0.0733
+Logistic Regression Mean±Std F1 Score: 0.6242 ± 0.1158
+Random Forest Mean±Std F1 Score: 0.7841 ± 0.0507
+RVM Mean±Std F1 Score: 0.7832 ± 0.1096
 '''
 
 
@@ -210,9 +171,12 @@ shap_values = explainer.shap_values(X_encoded_array)
 # Extract feature names from the X_encoded DataFrame
 feature_names = X_encoded.columns
 
+# modify feature names using the imported combined_cols_dict
+feature_names = [combined_cols_dict[feature] for feature in feature_names]
+
 # Summarize feature importance using SHAP values for the positive class
 plt.figure(figsize=(10, 6))
-shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, plot_type="bar", show=False)
+shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, plot_type="bar", show=False, max_display=30)
 # Save the plot
 plt.tight_layout()
 plt.subplots_adjust(right=1.5)
@@ -220,7 +184,7 @@ plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance.png'), bbox_in
 
 # Visualize SHAP feature importance as a beeswarm plot
 plt.figure(figsize=(10, 6))
-shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, show=False)  # Beeswarm plot with feature names
+shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, show=False, max_display=30)  # Beeswarm plot with feature names
 # Save the plot
 plt.tight_layout()
 plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance_distribution.png'), bbox_inches='tight', dpi=300)
