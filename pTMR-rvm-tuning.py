@@ -72,7 +72,7 @@ print(f"Best score: {best_score}")
 results_df = pd.DataFrame(grid_search.cv_results_)
 results_df = results_df.sort_values(by='mean_test_score', ascending=False)
 results_df = results_df.reset_index(drop=True)
-results_df.to_csv(os.path.join(data_folder, "rvm_results.csv"), index=False)
+results_df.to_csv(os.path.join(data_folder, "pTMR_rvm_results.csv"), index=False)
 
 # Print the best results for each kernel
 kernels = results_df['param_kernel'].unique()
