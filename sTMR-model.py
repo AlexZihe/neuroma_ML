@@ -215,27 +215,61 @@ explainer = shap.KernelExplainer(predict_positive_proba, X_encoded_array)
 # Calculate SHAP values (this can be computationally intensive for large datasets)
 shap_values = explainer.shap_values(X_encoded_array)
 
-# # Debugging: Check if SHAP values and X_encoded shapes match
-# print("X_encoded_array shape:", X_encoded_array.shape)
-# print("shap_values[1] shape:", np.array(shap_values[1]).shape)
-
 # Extract feature names from the X_encoded DataFrame
 feature_names = X_encoded.columns
 
 # modify feature names using the imported combined_cols_dict
 feature_names = [combined_cols_dict[feature] for feature in feature_names]
 
+# Calculate mean absolute SHAP values for feature importance
+mean_shap_values = np.abs(shap_values).mean(axis=0)
+
+# Create a DataFrame for SHAP values
+shap_df = pd.DataFrame({
+    'Feature': feature_names,
+    'Mean |SHAP|': mean_shap_values
+})
+
+# Sort by importance
+shap_df = shap_df.sort_values(by='Mean |SHAP|', ascending=False)
+
+# Save SHAP values to a CSV file
+shap_df.to_csv(os.path.join(fig_folder, 'rvm_shap_feature_importance.csv'), index=False)
+
 # Summarize feature importance using SHAP values for the positive class
 plt.figure(figsize=(10, 6))
-shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, plot_type="bar", show=False, max_display= 30)
+shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, plot_type="bar", show=False, max_display=30)
 # Save the plot
 plt.tight_layout()
-plt.subplots_adjust(right=1.2)
+plt.subplots_adjust(right=1.5)
 plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance.png'), bbox_inches='tight', dpi=300)
+
+# Bar Plot with Superimposed Values
+bar_color = '#1E88E5' # Use darker blue (same as SHAP default color)
+plt.figure(figsize=(10, 6))
+bars = plt.barh(shap_df['Feature'], shap_df['Mean |SHAP|'], color=bar_color)
+plt.xlabel('Mean(|SHAP Value|) (average impact on model output magnitude)')
+# plt.ylabel('Feature Name', fontsize = 12)
+# plt.title('SHAP Feature Importance (RVM)')
+plt.gca().invert_yaxis()  # Highest importance at top
+plt.gca().spines['top'].set_visible(False)
+plt.gca().spines['right'].set_visible(False)
+
+# Add value labels directly on each bar
+for bar in bars:
+    width = bar.get_width()  # Get bar length
+    plt.text(width,  # Position right of the bar
+             bar.get_y() + bar.get_height() / 2,  # Center vertically
+             f'{width:.3f}',  # Format the label to 3 decimal places
+             va='center')
+
+# Save the updated bar plot
+plt.tight_layout()
+plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance_with_values.png'), bbox_inches='tight', dpi=300)
 
 # Visualize SHAP feature importance as a beeswarm plot
 plt.figure(figsize=(10, 6))
-shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, show=False, max_display= 30)  # Beeswarm plot with feature names
+shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, show=False, max_display=30)  # Beeswarm plot with feature names
 # Save the plot
 plt.tight_layout()
 plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance_distribution.png'), bbox_inches='tight', dpi=300)
