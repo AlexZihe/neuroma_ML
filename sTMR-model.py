@@ -174,7 +174,7 @@ for model_name, norm_cm in zip(models, normalized_cms):
 
     # Save the confusion matrix plot
     confusion_matrix_path = os.path.join(fig_folder, f'normalized_average_confusion_matrix_{model_name.replace(" ", "_")}.png')
-    plt.savefig(confusion_matrix_path, dpi=300)
+    plt.savefig(confusion_matrix_path, dpi=1000)
     plt.close()
 
     print(f"Normalized Average Confusion Matrix for {model_name} saved at: {confusion_matrix_path}")
@@ -242,7 +242,7 @@ shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, plo
 # Save the plot
 plt.tight_layout()
 plt.subplots_adjust(right=1.5)
-plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance.png'), bbox_inches='tight', dpi=300)
+plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance.png'), bbox_inches='tight', dpi=1000)
 
 # Bar Plot with Superimposed Values
 bar_color = '#1E88E5' # Use darker blue (same as SHAP default color)
@@ -265,11 +265,11 @@ for bar in bars:
 
 # Save the updated bar plot
 plt.tight_layout()
-plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance_with_values.png'), bbox_inches='tight', dpi=300)
+plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance_with_values.png'), bbox_inches='tight', dpi=1000)
 
 # Visualize SHAP feature importance as a beeswarm plot
 plt.figure(figsize=(10, 6))
 shap.summary_plot(shap_values, X_encoded_array, feature_names=feature_names, show=False, max_display=30)  # Beeswarm plot with feature names
 # Save the plot
 plt.tight_layout()
-plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance_distribution.png'), bbox_inches='tight', dpi=300)
+plt.savefig(os.path.join(fig_folder, 'rvm_shap_feature_importance_distribution.png'), bbox_inches='tight', dpi=1000)
