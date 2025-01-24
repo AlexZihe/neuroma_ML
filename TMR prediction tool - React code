@@ -1,0 +1,123 @@
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+
+const TMRPredictionTool = () => {
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>TMR Surgical Risk Assessment Tool</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">TMR Type</label>
+              <select className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                <option value="primary">Primary TMR</option>
+                <option value="secondary">Secondary TMR</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Sex</label>
+              <select className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Current Smoker</label>
+              <select className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Pre-operative Opioid Use</label>
+              <select className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Depression</label>
+              <select className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Amputation Level</label>
+              <select className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                <option value="distal">Distal (Transradial/Transtibial)</option>
+                <option value="proximal">Proximal (Transhumeral/Transfemoral)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Current Pain Score (0-10)</label>
+              <input 
+                type="number"
+                min="0"
+                max="10"
+                className="w-full p-2 border rounded"
+                placeholder="Enter score..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Anxiety</label>
+              <select className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Alert className="border">
+              <AlertTitle className="text-lg font-bold">Risk Assessment</AlertTitle>
+              <AlertDescription>
+                <div className="mt-2">
+                  <div className="text-sm font-medium">Enter patient information to view risk assessment</div>
+                </div>
+              </AlertDescription>
+            </Alert>
+
+            <Alert>
+              <AlertTitle>Clinical Recommendations</AlertTitle>
+              <AlertDescription>
+                <div className="mt-2 text-sm">
+                  Recommendations will appear here based on risk assessment
+                </div>
+              </AlertDescription>
+            </Alert>
+
+            <div className="text-sm text-gray-500 mt-4">
+              <p>This tool evaluates major risk factors identified in our RVM model study:</p>
+              <ul className="list-disc pl-5 space-y-1 mt-2">
+                <li>Primary TMR: opioid use, male sex, depression, smoking, proximal amputation</li>
+                <li>Secondary TMR: smoking, high pain scores, anxiety, opioid use, depression, proximal amputation</li>
+              </ul>
+              <p className="mt-2 font-medium">Note: This tool should be used as a supplement to, not a replacement for, clinical judgment.</p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default TMRPredictionTool;
