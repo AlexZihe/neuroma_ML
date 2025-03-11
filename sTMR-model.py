@@ -82,6 +82,16 @@ logistic_f1s = []
 rf_f1s = []
 rvm_f1s = []
 
+# Initialize lists to store sensitivity and specificity for each iteration
+sensitivity_logistic_list = []
+specificity_logistic_list = []
+
+sensitivity_rf_list = []
+specificity_rf_list = []
+
+sensitivity_rvm_list = []
+specificity_rvm_list = []
+
 # Initialize accumulators for confusion matrices
 confusion_matrices_logistic = np.zeros((2, 2))
 confusion_matrices_rf = np.zeros((2, 2))
@@ -135,6 +145,32 @@ for i in range(n_iterations):
     y_pred_rvm = rvm_model.predict(X_test)
     confusion_matrices_rvm += confusion_matrix(y_test, y_pred_rvm)
 
+    # Compute confusion matrix values for each model
+    cm_logistic = confusion_matrix(y_test, y_pred_logistic)
+    cm_rf = confusion_matrix(y_test, y_pred_rf)
+    cm_rvm = confusion_matrix(y_test, y_pred_rvm)
+
+    # Unpack confusion matrix values: TN, FP, FN, TP
+    TN_l, FP_l, FN_l, TP_l = cm_logistic.ravel()
+    TN_rf, FP_rf, FN_rf, TP_rf = cm_rf.ravel()
+    TN_rvm, FP_rvm, FN_rvm, TP_rvm = cm_rvm.ravel()
+
+    # Calculate sensitivity and specificity for each model
+    sens_logistic = TP_l / (TP_l + FN_l) if (TP_l + FN_l) > 0 else 0
+    spec_logistic = TN_l / (TN_l + FP_l) if (TN_l + FP_l) > 0 else 0
+    sensitivity_logistic_list.append(sens_logistic)
+    specificity_logistic_list.append(spec_logistic)
+
+    sens_rf = TP_rf / (TP_rf + FN_rf) if (TP_rf + FN_rf) > 0 else 0
+    spec_rf = TN_rf / (TN_rf + FP_rf) if (TN_rf + FP_rf) > 0 else 0
+    sensitivity_rf_list.append(sens_rf)
+    specificity_rf_list.append(spec_rf)
+
+    sens_rvm = TP_rvm / (TP_rvm + FN_rvm) if (TP_rvm + FN_rvm) > 0 else 0
+    spec_rvm = TN_rvm / (TN_rvm + FP_rvm) if (TN_rvm + FP_rvm) > 0 else 0
+    sensitivity_rvm_list.append(sens_rvm)
+    specificity_rvm_list.append(spec_rvm)
+
 
 # Calculate and print the mean and standard deviation of the ROC AUC scores
 print(f"Logistic Regression Mean±Std ROC AUC: {np.mean(logistic_AUROCs):.4f} ± {np.std(logistic_AUROCs):.4f}")
@@ -150,6 +186,16 @@ print(f"RVM Mean±Std Accuracy: {np.mean(rvm_accuracies):.4f} ± {np.std(rvm_acc
 print(f"Logistic Regression Mean±Std F1 Score: {np.mean(logistic_f1s):.4f} ± {np.std(logistic_f1s):.4f}")
 print(f"Random Forest Mean±Std F1 Score: {np.mean(rf_f1s):.4f} ± {np.std(rf_f1s):.4f}")
 print(f"RVM Mean±Std F1 Score: {np.mean(rvm_f1s):.4f} ± {np.std(rvm_f1s):.4f}")
+
+# Calculate and print the mean and standard deviation of sensitivity
+print(f"Logistic Regression Mean±Std Sensitivity: {np.mean(sensitivity_logistic_list):.4f} ± {np.std(sensitivity_logistic_list):.4f}")
+print(f"Random Forest Mean±Std Sensitivity: {np.mean(sensitivity_rf_list):.4f} ± {np.std(sensitivity_rf_list):.4f}")
+print(f"RVM Mean±Std Sensitivity: {np.mean(sensitivity_rvm_list):.4f} ± {np.std(sensitivity_rvm_list):.4f}")
+
+# Calculate and print the mean and standard deviation of specificity
+print(f"Logistic Regression Mean±Std Specificity: {np.mean(specificity_logistic_list):.4f} ± {np.std(specificity_logistic_list):.4f}")
+print(f"Random Forest Mean±Std Specificity: {np.mean(specificity_rf_list):.4f} ± {np.std(specificity_rf_list):.4f}")
+print(f"RVM Mean±Std Specificity: {np.mean(specificity_rvm_list):.4f} ± {np.std(specificity_rvm_list):.4f}")
 
 # Plot the ROC curves with confidence intervals
 plot_auroc_with_ci(y_test_list, logistic_preds_list, 'Logistic Regression', fig_folder)
@@ -191,6 +237,15 @@ RVM Mean±Std Accuracy: 0.7381 ± 0.0775
 Logistic Regression Mean±Std F1 Score: 0.6876 ± 0.0848
 Random Forest Mean±Std F1 Score: 0.8279 ± 0.0661
 RVM Mean±Std F1 Score: 0.7990 ± 0.0771
+
+Logistic Regression Mean±Std Sensitivity: 0.6000 ± 0.1245
+Random Forest Mean±Std Sensitivity: 0.8143 ± 0.0857
+RVM Mean±Std Sensitivity: 0.8071 ± 0.1357
+
+Logistic Regression Mean±Std Specificity: 0.7429 ± 0.1400
+Random Forest Mean±Std Specificity: 0.7000 ± 0.1348
+RVM Mean±Std Specificity: 0.6000 ± 0.1666
+
 '''
 
 
