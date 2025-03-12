@@ -9,22 +9,20 @@ from features_name_dict import combined_cols_dict
 from matplotlib import pyplot as plt
 from utils import plot_auroc_with_ci
 
-# Load pRMT dataset
+# Load sRMT dataset
 proj_folder = r"E:\work_local_backup\neuroma_data_project\TMR-ML"
 data_folder = os.path.join(proj_folder, "data")
-data_file = os.path.join(data_folder, "pTMR.csv")
-df_primary = pd.read_csv(data_file)
+data_file = os.path.join(data_folder, "sTMR.csv")
+df_secondary = pd.read_csv(data_file)
 
-fig_folder = os.path.join(proj_folder, "figures", "pTMR")
+fig_folder = os.path.join(proj_folder, "figures", "sTMR")
 if not os.path.exists(fig_folder):
     os.makedirs(fig_folder)
 
-# Drop rows with missing values
-df_primary = df_primary.dropna()
-
+df_secondary = df_secondary.dropna()
 # Define the target variable (dependent variable) as y
-X = df_primary.drop(columns=['good_outcome'])
-y = df_primary['good_outcome']
+X = df_secondary.drop(columns=['good_outcome'])
+y = df_secondary['good_outcome']
 
 # Separate numerical and categorical columns
 numerical_cols = X.select_dtypes(include='number').columns
@@ -49,8 +47,8 @@ for i, cat in enumerate(categorical_cols):
 X_encoded = pd.DataFrame(X_encoded, columns=encoded_columns)
 
 # Initialize the RVM model
-rvm_model = EMRVC(alpha_max=1000.0, coef0=0, gamma=0.1, init_alpha=0.0001643655489809336,
-                  kernel='sigmoid', max_iter=100000)
+rvm_model = EMRVC(alpha_max=1000.0, coef0=0, degree=2, gamma=1,
+      init_alpha=9.611687812379854e-05, kernel='poly', max_iter=100000)
 
 # Number of iterations for train-test splits
 n_iterations = 10
@@ -75,20 +73,6 @@ rvm_accuracies_female = []
 rvm_f1s_female = []
 sensitivity_rvm_female_list = []
 specificity_rvm_female_list = []
-
-# # Lists for 'distal_proximal_proximal' specific metrics (proximal)
-# rvm_AUROCs_proximal = []
-# rvm_accuracies_proximal = []
-# rvm_f1s_proximal = []
-# sensitivity_rvm_proximal_list = []
-# specificity_rvm_proximal_list = []
-#
-# # Lists for 'distal_proximal_proximal' specific metrics (distal)
-# rvm_AUROCs_distal = []
-# rvm_accuracies_distal = []
-# rvm_f1s_distal = []
-# sensitivity_rvm_distal_list = []
-# specificity_rvm_distal_list = []
 
 # Perform multiple train-test splits and compute metrics
 for i in range(n_iterations):
@@ -164,56 +148,6 @@ for i in range(n_iterations):
         sensitivity_rvm_female_list.append(None)
         specificity_rvm_female_list.append(None)
 
-    # # --------------------------
-    # # Split the test set by distal_proximal
-    # # --------------------------
-    # # Note: This assumes 'distal_proximal_proximal' is a column in X_encoded.
-    # X_test_proximal = X_test[X_test['distal_proximal_proximal'] == 1]
-    # y_test_proximal = y_test[X_test['distal_proximal_proximal'] == 1]
-    # X_test_distal = X_test[X_test['distal_proximal_proximal'] == 0]
-    # y_test_distal = y_test[X_test['distal_proximal_proximal'] == 0]
-    #
-    # # Metrics for the proximal subgroup
-    # if not X_test_proximal.empty:
-    #     rvm_test_pred_proximal = rvm_model.predict_proba(X_test_proximal)[:, 1]
-    #     rvm_AUROCs_proximal.append(roc_auc_score(y_test_proximal, rvm_test_pred_proximal))
-    #     rvm_accuracies_proximal.append(rvm_model.score(X_test_proximal, y_test_proximal))
-    #     rvm_f1s_proximal.append(f1_score(y_test_proximal, rvm_model.predict(X_test_proximal)))
-    #     y_pred_proximal = rvm_model.predict(X_test_proximal)
-    #     cm_proximal = confusion_matrix(y_test_proximal, y_pred_proximal)
-    #     TN_proximal, FP_proximal, FN_proximal, TP_proximal = cm_proximal.ravel()
-    #     sens_proximal = TP_proximal / (TP_proximal + FN_proximal) if (TP_proximal + FN_proximal) > 0 else 0
-    #     spec_proximal = TN_proximal / (TN_proximal + FP_proximal) if (TN_proximal + FP_proximal) > 0 else 0
-    #     sensitivity_rvm_proximal_list.append(sens_proximal)
-    #     specificity_rvm_proximal_list.append(spec_proximal)
-    #
-    # else:
-    #     rvm_AUROCs_proximal.append(None)
-    #     rvm_accuracies_proximal.append(None)
-    #     rvm_f1s_proximal.append(None)
-    #     sensitivity_rvm_proximal_list.append(None)
-    #     specificity_rvm_proximal_list.append(None)
-    #
-    # # Metrics for the distal subgroup
-    # if not X_test_distal.empty:
-    #     rvm_test_pred_distal = rvm_model.predict_proba(X_test_distal)[:, 1]
-    #     rvm_AUROCs_distal.append(roc_auc_score(y_test_distal, rvm_test_pred_distal))
-    #     rvm_accuracies_distal.append(rvm_model.score(X_test_distal, y_test_distal))
-    #     rvm_f1s_distal.append(f1_score(y_test_distal, rvm_model.predict(X_test_distal)))
-    #     y_pred_distal = rvm_model.predict(X_test_distal)
-    #     cm_distal = confusion_matrix(y_test_distal, y_pred_distal)
-    #     TN_distal, FP_distal, FN_distal, TP_distal = cm_distal.ravel()
-    #     sens_distal = TP_distal / (TP_distal + FN_distal) if (TP_distal + FN_distal) > 0 else 0
-    #     spec_distal = TN_distal / (TN_distal + FP_distal) if (TN_distal + FP_distal) > 0 else 0
-    #     sensitivity_rvm_distal_list.append(sens_distal)
-    #     specificity_rvm_distal_list.append(spec_distal)
-    # else:
-    #     rvm_AUROCs_distal.append(None)
-    #     rvm_accuracies_distal.append(None)
-    #     rvm_f1s_distal.append(None)
-    #     sensitivity_rvm_distal_list.append(None)
-    #     specificity_rvm_distal_list.append(None)
-
 
 # Define a helper function to compute mean and standard deviation safely
 def safe_mean_std(values):
@@ -245,21 +179,6 @@ female_f1_mean, female_f1_std = safe_mean_std(rvm_f1s_female)
 female_sens_mean, female_sens_std = safe_mean_std(sensitivity_rvm_female_list)
 female_spec_mean, female_spec_std = safe_mean_std(specificity_rvm_female_list)
 
-# # Compute aggregated metrics for the proximal subgroup
-# proximal_auroc_mean, proximal_auroc_std = safe_mean_std(rvm_AUROCs_proximal)
-# proximal_accuracy_mean, proximal_accuracy_std = safe_mean_std(rvm_accuracies_proximal)
-# proximal_f1_mean, proximal_f1_std = safe_mean_std(rvm_f1s_proximal)
-# proximal_sens_mean, proximal_sens_std = safe_mean_std(sensitivity_rvm_proximal_list)
-# proximal_spec_mean, proximal_spec_std = safe_mean_std(specificity_rvm_proximal_list)
-#
-# # Compute aggregated metrics for the distal subgroup
-# distal_auroc_mean, distal_auroc_std = safe_mean_std(rvm_AUROCs_distal)
-# distal_accuracy_mean, distal_accuracy_std = safe_mean_std(rvm_accuracies_distal)
-# distal_f1_mean, distal_f1_std = safe_mean_std(rvm_f1s_distal)
-# distal_sens_mean, distal_sens_std = safe_mean_std(sensitivity_rvm_distal_list)
-# distal_spec_mean, distal_spec_std = safe_mean_std(specificity_rvm_distal_list)
-
-
 # Combine mean and std into formatted strings using 4 decimal places
 combined_overall = [
     f"{overall_auroc_mean:.4f} ± {overall_auroc_std:.4f}",
@@ -285,30 +204,12 @@ combined_female = [
     f"{female_spec_mean:.4f} ± {female_spec_std:.4f}"
 ]
 
-# combined_proximal = [
-#     f"{proximal_auroc_mean:.4f} ± {proximal_auroc_std:.4f}",
-#     f"{proximal_accuracy_mean:.4f} ± {proximal_accuracy_std:.4f}",
-#     f"{proximal_f1_mean:.4f} ± {proximal_f1_std:.4f}",
-#     f"{proximal_sens_mean:.4f} ± {proximal_sens_std:.4f}",
-#     f"{proximal_spec_mean:.4f} ± {proximal_spec_std:.4f}"
-# ]
-#
-# combined_distal = [
-#     f"{distal_auroc_mean:.4f} ± {distal_auroc_std:.4f}",
-#     f"{distal_accuracy_mean:.4f} ± {distal_accuracy_std:.4f}",
-#     f"{distal_f1_mean:.4f} ± {distal_f1_std:.4f}",
-#     f"{distal_sens_mean:.4f} ± {distal_sens_std:.4f}",
-#     f"{distal_spec_mean:.4f} ± {distal_spec_std:.4f}"
-# ]
-
 # Create a DataFrame to store the combined results
 results_combined = pd.DataFrame({
     'Metric': ['AUROC', 'Accuracy', 'F1', 'Sensitivity', 'Specificity'],
     'Overall': combined_overall,
     'Male': combined_male,
-    'Female': combined_female,
-    # 'Proximal': combined_proximal,
-    # 'Distal': combined_distal
+    'Female': combined_female
 })
 
 # Export the combined results as a CSV file

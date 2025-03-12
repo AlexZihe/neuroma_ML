@@ -35,7 +35,7 @@ combined_cols_dict = {
     'gender_Male': 'Sex, Male',
     'alcoholism_Yes': 'Alcoholism',
     'smoking_Yes': 'Smoking',
-    'opioid_use_preop_Yes': 'Opoid use, preop',
+    'opioid_use_preop_Yes': 'Opioid use, preop',
     'neurop_pain_med_use_prepo_Yes': 'Neuromodulator use, preop',
     'diabetes_Yes': 'Diabetes',
     'hypothyroidism_Yes': 'Hypothyroidism',
